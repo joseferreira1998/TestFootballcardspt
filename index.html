@@ -509,7 +509,16 @@ function renderCards(filter) {
   const noResults = document.getElementById('no-results');
   container.innerHTML = '';
 
-  const filtered = filter === 'all' ? cards : cards.filter(c => c.cat.includes(filter));
+const filtered = cards.filter(c => {
+  const matchesCategory = filter === 'all' || c.cat.includes(filter);
+
+  const matchesSearch =
+    c.name.toLowerCase().includes(searchTerm) ||
+    c.club.toLowerCase().includes(searchTerm) ||
+    c.detail.toLowerCase().includes(searchTerm);
+
+  return matchesCategory && matchesSearch;
+});
 
   if (filtered.length === 0) {
     noResults.classList.add('visible');
