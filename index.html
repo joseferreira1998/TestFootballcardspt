@@ -475,7 +475,6 @@
     <button class="filter-btn" data-cat="ufc">UFC</button>
     <button class="filter-btn" data-cat="diversas">Diversas</button>
   </div>
-
 </div>
 
 <main class="grid-wrap">
@@ -492,8 +491,6 @@
 <script>
 const WA = "351919162715";
 
-let searchTerm = '';
-
 function waLink(card) {
   const msg = encodeURIComponent(`Olá! Tenho interesse na carta: ${card.name} — ${card.detail} (${card.set}) — ${card.price}€`);
   return `https://wa.me/${WA}?text=${msg}`;
@@ -504,17 +501,7 @@ function renderCards(filter) {
   const noResults = document.getElementById('no-results');
   container.innerHTML = '';
 
-  const filtered = cards.filter(c => {
-    const matchesCategory = filter === 'all' || c.cat.includes(filter);
-
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchTerm) ||
-      c.club.toLowerCase().includes(searchTerm) ||
-      c.detail.toLowerCase().includes(searchTerm) ||
-      c.set.toLowerCase().includes(searchTerm);
-
-    return matchesCategory && matchesSearch;
-  });
+  const filtered = filter === 'all' ? cards : cards.filter(c => c.cat.includes(filter));
 
   if (filtered.length === 0) {
     noResults.classList.add('visible');
@@ -522,6 +509,7 @@ function renderCards(filter) {
   }
   noResults.classList.remove('visible');
 
+  // Group by category for "all" view
   if (filter === 'all') {
     const cats = [
       { id: 'autos', label: 'Autos' },
@@ -540,21 +528,13 @@ function renderCards(filter) {
       { id: 'ufc', label: 'UFC' },
       { id: 'diversas', label: 'Diversas' },
     ];
-
     cats.forEach(cat => {
-      const catCards = filtered.filter(c => c.cat.includes(cat.id));
+      const catCards = cards.filter(c => c.cat.includes(cat.id));
       if (!catCards.length) return;
-
       const sec = document.createElement('div');
-      sec.innerHTML = `
-        <h2 class="section-title">${cat.label}</h2>
-        <div class="cards-grid">
-          ${catCards.map(cardHTML).join('')}
-        </div>
-      `;
+      sec.innerHTML = `<h2 class="section-title">${cat.label}</h2><div class="cards-grid">${catCards.map(cardHTML).join('')}</div>`;
       container.appendChild(sec);
     });
-
   } else {
     const grid = document.createElement('div');
     grid.className = 'cards-grid';
@@ -562,7 +542,7 @@ function renderCards(filter) {
     container.appendChild(grid);
   }
 
-  // Stats
+  // Update count
   const avail = cards.filter(c => !c.sold).length;
   document.getElementById('available-count').textContent = `${avail} disponíveis`;
   document.getElementById('stat-total').textContent = cards.length;
@@ -593,17 +573,16 @@ function cardHTML(card) {
         <div class="card-footer">
           <div class="card-price">${card.price}€</div>
 
-          <a 
-            href="${waLink(card)}" 
-            target="_blank" 
-            class="buy-btn"
-            onclick="event.stopPropagation()"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.52 3.48A11.82 11.82 0 0 0 12.05 0C5.5 0 .19 5.31.19 11.86c0 2.09.55 4.13 1.6 5.92L0 24l6.39-1.67a11.8 11.8 0 0 0 5.66 1.44h.01c6.55 0 11.86-5.31 11.86-11.86 0-3.17-1.23-6.14-3.4-8.43Z"/>
-            </svg>
-          </a>
-
+<a 
+  href="${waLink(card)}" 
+  target="_blank" 
+  class="buy-btn"
+  onclick="event.stopPropagation()"
+>
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.52 3.48A11.82 11.82 0 0 0 12.05 0C5.5 0 .19 5.31.19 11.86c0 2.09.55 4.13 1.6 5.92L0 24l6.39-1.67a11.8 11.8 0 0 0 5.66 1.44h.01c6.55 0 11.86-5.31 11.86-11.86 0-3.17-1.23-6.14-3.4-8.43ZM12.06 21.3a9.4 9.4 0 0 1-4.8-1.32l-.34-.2-3.79 1 1.01-3.69-.22-.38a9.35 9.35 0 0 1-1.44-5.01c0-5.18 4.22-9.4 9.41-9.4 2.51 0 4.87.98 6.64 2.76a9.35 9.35 0 0 1 2.75 6.64c0 5.19-4.22 9.41-9.42 9.41Zm5.16-7.03c-.28-.14-1.66-.82-1.92-.91-.26-.09-.45-.14-.64.14-.19.28-.73.91-.9 1.09-.17.19-.33.21-.61.07-.28-.14-1.2-.44-2.29-1.39-.85-.75-1.42-1.68-1.58-1.96-.17-.28-.02-.43.12-.57.12-.12.28-.33.42-.5.14-.17.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.64-1.54-.88-2.11-.23-.55-.47-.47-.64-.48h-.55c-.19 0-.49.07-.75.35s-.98.96-.98 2.34.99 2.72 1.13 2.91c.14.19 1.95 2.97 4.73 4.17.66.28 1.18.45 1.58.58.66.21 1.26.18 1.74.11.53-.08 1.66-.68 1.9-1.34.23-.66.23-1.23.16-1.34-.07-.12-.26-.19-.54-.33Z"/>
+  </svg>
+</a>
         </div>
       </div>
     </div>
@@ -614,19 +593,9 @@ function cardHTML(card) {
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
-
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-
   renderCards(btn.dataset.cat);
-});
-
-// SEARCH
-document.getElementById('search').addEventListener('input', e => {
-  searchTerm = e.target.value.toLowerCase();
-
-  const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
-  renderCards(activeFilter);
 });
 
 // Init
